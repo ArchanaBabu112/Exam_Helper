@@ -1,0 +1,16 @@
+openai
+streamlit
+python-dotenv
+langchain
+langchain-community
+faiss-cpu
+langchain-openai
+# transformers
+tensorflow
+google-generativeai
+langchain-google-genai
+PyPDF2
+google-cloud-aiplatform>=1.38
+groq
+langchain-groq
+langchain
