@@ -2,23 +2,36 @@ import streamlit as st
 import os
 
 from langchain_openai.chat_models import ChatOpenAI  # Correct LLM model import
+
+from langchain_openai import ChatOpenAI  # Correct LLM model import
+
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.prompts import ChatPromptTemplate
 from langchain.chains import create_retrieval_chain
 from langchain.vectorstores import FAISS  # Correct FAISS import
 from langchain.document_loaders import PyPDFDirectoryLoader  # Correct document loader
+
 from langchain.embeddings import OpenAIEmbeddings  # Use OpenAI Embeddings for vector
+from langchain_openai import OpenAIEmbeddings  # Use OpenAI Embeddings for vector
+
 from dotenv import load_dotenv
 import time
 
 load_dotenv()
 
+
+# Load OpenAI API key from .env
+openai_api_key = os.getenv('OPENAI_API_KEY')
+
+# Set up the Streamlit interface
+st.title("AI Document Q&A") 
 # Load OpenAI API key from .env
 openai_api_key = os.getenv('OPENAI_API_KEY')
 
 # Set up the Streamlit interface
 st.title("AI Document Q&A")
+
 
 # Set up the language model (GPT-4 or GPT-3.5)
 llm = ChatOpenAI(
@@ -40,6 +53,7 @@ prompt = ChatPromptTemplate.from_template(
 
 # Function to create vector embeddings
 def vector_embedding():
+
     if "vectors" not in st.session_state:
         st.session_state.embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")  # Using OpenAI's embeddings
         st.session_state.loader = PyPDFDirectoryLoader("./us_census")  # Load PDF directory
@@ -47,6 +61,15 @@ def vector_embedding():
         st.session_state.text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)  # Chunk splitting
         st.session_state.final_documents = st.session_state.text_splitter.split_documents(st.session_state.docs[:20])  # Split the docs
         st.session_state.vectors = FAISS.from_documents(st.session_state.final_documents, st.session_state.embeddings)  # Create vector store
+
+    if "vector" not in st.session_state:
+        st.session_state.embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")  # Using OpenAI's embeddings
+        st.session_state.loader = PyPDFDirectoryLoader("./class10")  # Load PDF directory
+        st.session_state.docs = st.session_state.loader.load()  # Document loading
+        st.session_state.text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)  # Chunk splitting
+        st.session_state.final_documents = st.session_state.text_splitter.split_documents(st.session_state.docs[:20])  # Split the docs
+        st.session_state.vector = FAISS.from_documents(st.session_state.final_documents, st.session_state.embeddings)  # Create vector store
+
 
 # Input box for user questions
 prompt1 = st.text_input("Enter your question from documents")
@@ -60,6 +83,7 @@ if st.button("Create Document Embeddings"):
 if prompt1:
     # Create the document chain and retrieval chain
     document_chain = create_stuff_documents_chain(llm, prompt)
+
     retriever = st.session_state.vectors.as_retriever()
     retrieval_chain = create_retrieval_chain(retriever, document_chain)
     
@@ -67,6 +91,15 @@ if prompt1:
     start = time.process_time()
     response = retrieval_chain.invoke({'input': prompt1})
     response_time = time.process_time() - start
+
+    retriever = st.session_state.vector.as_retriever()
+    retrieval_chain = create_retrieval_chain(retriever, document_chain)
+    
+    # Measure response time
+    start = time.time()
+    response = retrieval_chain.invoke({'input': prompt1})
+    response_time = time.time() - start
+
     print("Response time:", response_time)
     
     # Display the answer

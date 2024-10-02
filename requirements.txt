@@ -6,11 +6,13 @@ langchain-community
 faiss-cpu
 langchain-openai
 # transformers
-tensorflow
+# tensorflow
 google-generativeai
 langchain-google-genai
 PyPDF2
 google-cloud-aiplatform>=1.38
-groq
-langchain-groq
+# groq
+# langchain-groq
 langchain
+# gigachain-core
+google-generativeai
